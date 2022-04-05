@@ -67,16 +67,16 @@ BEGIN
             --		db_pushbuttons <= KEY0 ;
 
             --      if db_pushbuttons = '1' and db_pushbuttons_previous = '0' then --rising edge detect
-            IF KEY0 = '1' AND db_pushbuttons_previous <= '0' THEN
+            IF KEY0 = '1' AND db_pushbuttons_previous <= '0' THEN -- 우측(?) 키가 눌렸을 때.
                 db_pushbuttons_previous <= '1';
-                IF one = 9 AND ten = 9 THEN
+                IF one = 9 AND ten = 9 THEN -- 십의자리 & 일의 자리 모두 오버플로우가 났을 때 -> 99 -> 0
                     one <= 0;
                     ten <= 0;
-                ELSIF one = 9 THEN
-                    one <= 0;
-                    ten <= ten + 1;
+                ELSIF one = 9 THEN -- 일의자리 오버플로 -> 십의자리로 올림. 캐리
+                    one <= 0; -- 초기화
+                    ten <= ten + 1; -- 캐리
                 ELSE
-                    one <= one + 1;
+                    one <= one + 1; -- 1증가
                     --					   end if;
                 END IF;
             ELSIF KEY0 = '0' THEN
@@ -102,9 +102,9 @@ BEGIN
     --첫번째 출력
     PROCESS (one)
     BEGIN
-        CASE one IS
-            WHEN 0 => out_one <= "1000000";
-            WHEN 1 => out_one <= "1111001";
+        CASE one IS --           .gfedcba
+            WHEN 0 => out_one <= "1000000"; -- 0
+            WHEN 1 => out_one <= "1111001"; -- 1
             WHEN 2 => out_one <= "0100100";
             WHEN 3 => out_one <= "0110000";
             WHEN 4 => out_one <= "0011001";
