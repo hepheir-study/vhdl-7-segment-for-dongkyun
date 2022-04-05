@@ -69,14 +69,14 @@ BEGIN
             --      if db_pushbuttons = '1' and db_pushbuttons_previous = '0' then --rising edge detect
             IF KEY0 = '1' AND db_pushbuttons_previous <= '0' THEN -- 우측(?) 키가 눌렸을 때.
                 db_pushbuttons_previous <= '1';
-                IF one = 9 AND ten = 9 THEN -- 십의자리 & 일의 자리 모두 오버플로우가 났을 때 -> 99 -> 0
-                    one <= 0;
-                    ten <= 0;
-                ELSIF one = 9 THEN -- 일의자리 오버플로 -> 십의자리로 올림. 캐리
-                    one <= 0; -- 초기화
-                    ten <= ten + 1; -- 캐리
+                IF one = 0 AND ten = 0 THEN
+                    one <= 5;
+                    ten <= 2;
+                ELSIF one = 0 THEN
+                    one <= 9;
+                    ten <= ten - 1;
                 ELSE
-                    one <= one + 1; -- 1증가
+                    one <= one - 1;
                     --					   end if;
                 END IF;
             ELSIF KEY0 = '0' THEN
