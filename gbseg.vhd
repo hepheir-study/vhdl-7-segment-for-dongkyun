@@ -35,7 +35,7 @@ ENTITY gbseg IS
     PORT (
         RSTB : IN STD_LOGIC;
         CLK_50M : IN STD_LOGIC;
-        DIGIT : INOUT STD_LOGIC_VECTOR(3 DOWNTO 0);
+        DIGIT : INOUT STD_LOGIC_VECTOR(3 DOWNTO 0); -- 8 ½½¶óÀÌµå¿¡ º¸¸é, DIGITÀÌ 7 ¼¼±×¸ÕÆ®¸¦ ¼±ÅÃÇÏ´Â ½ÅÈ£ÀÎ °ÍÀ¸·Î ÃßÃøÇÒ ¼ö ÀÖ´Ù.
         SEG : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
 END gbseg;
 
@@ -44,29 +44,42 @@ ARCHITECTURE Behavioral OF gbseg IS
     SIGNAL clk_500 : STD_LOGIC;
 
 BEGIN
-    -----------------ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½  Clock 5MHz ----------------------
+    -----------------ÀÚ¸® ¼±ÅÃ Clock Generator : Clock 5MHz ----------------------
+    -- https://m.blog.naver.com/pcs874/60102113193
+
+    --    process ´ÙÀ½¿¡ °ýÈ£¾È¿¡ (clk,rst) µÎ°³ÀÇ ½ÅÈ£ÀÌ¸§ÀÌ µé¾î°¡ ÀÖ½À´Ï´Ù.
+    --    ÀÌ°ÍÀº sensitivityÀÔ´Ï´Ù. °¨Áö ÇÏ´Â °Í ÀÌ¶ó°í »ý°¢ÇÏ¸é µË´Ï´Ù.
+    --    ±×·¯´Ï±î ½ÅÈ£°¡ º¯ÇÏ´Â Áö¸¦ º¸°í ÀÖ´Ù°¡ ½ÅÈ£°¡ º¯ÇÏ¸é
+    --    ÇÁ·Î¼¼½º ¹® ¾ÈÀ¸·Î µé¾î¿Í¼­ ½ÇÇàÀ» ÇÑ´Ù´Â ÀÇ¹ÌÀÔ´Ï´Ù.
+
     PROCESS (RSTB, CLK_50M)
+
+        -- Ä«¿îÅÍ ÇÁ·Î¼¼½º´Ù.
+
+        -- slide has this comment
+        -- 5000000 50M/5M=10HZ and 10HZ/2=5 HZ
 
         --	variable cnt : integer range 0 to 50000000;  -- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½
         ---	variable cnt : integer range 0 to 5000;  -- ï¿½ï¿½ï¿½Ã¿ï¿½
-        VARIABLE cnt : INTEGER RANGE 0 TO 5000000; -- ï¿½ï¿½ï¿½ï¿½
+        VARIABLE cnt : INTEGER RANGE 0 TO 5000000; -- 50M/50K=1KHZ and 1KHZ/2=500 HZ
     BEGIN
 
         IF RSTB = '0' THEN
-            cnt := 0;
-            clk_500 <= '0';
+            cnt := 0;           -- variable ÀÎ °æ¿ì¿¡´Â := ¸¦ »ç¿ëÇÔ
+            clk_500 <= '0';     -- signal ÀÎ °æ¿ì¿¡´Â <= ¸¦ »ç¿ëÇÔ
 
         ELSIF rising_edge (CLK_50M) THEN
             ---				if cnt >= 49999999 then             -- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½
             ---				if cnt >= 4999 then            -- ï¿½ï¿½ï¿½Ã¿ï¿½
-            IF cnt >= 4999999 THEN -- ï¿½ï¿½ï¿½ï¿½
+            IF cnt >= 4999999 THEN -- Á¤»óµ¿ÀÛ½Ã
 
                 cnt := 0;
-                clk_500 <= NOT clk_500;
+                clk_500 <= NOT clk_500; -- ¿ÏÀü º¯Çß¾î ºñÆ® ¹ÝÀü±Þ.. -> 87¹ø ÁÙÀÇ PROCESS °¡ °¨ÁöÇØ.
+                    -- 10HZ ÀÇ °»½Å·ü, 1ÃÊ¿¡ 10¹ø falling / rising edge ¸¦ ±³Â÷ÇÏ°í ÀÖ´Â, Digit SelectionÀ» ÇÏ°íÀÖ´Â °Í. 100ms
 
             ELSE
                 cnt := cnt + 1;
-                clk_500 <= clk_500;
+                clk_500 <= clk_500; -- »ç½ÇÀº º¯ÇÏÁö ¾ÊÀº..
 
             END IF;
 
@@ -75,37 +88,38 @@ BEGIN
     END PROCESS;
     -------------------Digit selection-------------------------
 
-    PROCESS (RSTB, clk_500)
+    PROCESS (RSTB, clk_500) -- 87¹ø ÁÙ , yaw´Â 0.1ÃÊ¿¡ ÇÑ ¹ø È£ÃâµÈ´Ù.
 
     BEGIN
 
-        IF RSTB = '0' THEN
+        IF RSTB = '0' THEN -- ¸¸¾à ÃÖÃÊ ½ÇÇàÀÌ´Ù,
             --				DIGIT <= "1110";  -- ï¿½ï¿½ï¿½ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            DIGIT <= "0111"; -- ï¿½ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        ELSIF rising_edge (clk_500) THEN
-            DIGIT <= DIGIT(0) & DIGIT(3 DOWNTO 1); -- ï¿½ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            DIGIT <= "0111"; -- ¸Ç ¿ÞÂÊ ÀÚ¸® ¼±ÅÃ. ¸Ç ¿ÞÂÊºÎÅÍ ºÁº¸ÀÚ.
+        ELSIF rising_edge (clk_500) THEN -- ¶óÀÌÂ¡°ú ÆÞ¸µ¿¡ÁöÁß ¶óÀÌÁî¸¸ º¸±â ¶§¹®¿¡ 10/2 -> 5Hz °¡ µÇ¾î¹ö¸²
+            DIGIT <= DIGIT(0) & DIGIT(3 DOWNTO 1); -- ¼±ÅÃ ÀÚ¸® ÀÌµ¿ : -> ·Î ·ÎÅ×ÀÌ¼Ç 0111 -> 1011 -> 1101
             --				DIGIT <=   DIGIT(2 downto 0) & DIGIT(3)  ; -- ï¿½ï¿½ï¿½ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
-
+            -- 0.2 ÃÊ¿¡ ÇÑ¹ø¾¿ ¼¼±×¸ÕÆ®¸¦ ¿ÞÂÊ¿¡¼­ ¿À¸¥ÂÊÀ¸·Î ¹Ù²Ù¸ç ¼±ÅÃÇÔ.
         END IF;
 
     END PROCESS;
 
-    -------------ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½----------------------------
-    --- ï¿½Îºê·¦ ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´ï¿½ï¿? ï¿½ï¿½ï¿½×¸ï¿½Æ®ï¿½ï¿½ 0ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    ------------- °¢ ÀÚ¸®¸¶´Ù ¼ýÀÚ Ç¥½Ã ----------------------------
     PROCESS (DIGIT)
 
     BEGIN
 
         CASE DIGIT IS
-                --gfedcba
-            WHEN "0111" => SEG <= "11111001"; --ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Æ®
-            WHEN "1011" => SEG <= "10100100"; --2
-            WHEN "1101" => SEG <= "10110000"; --3
-            WHEN "1110" => SEG <= "10011001"; --4
-            WHEN OTHERS => SEG <= "11111111"; --
+            -- Acitve low ***
+                                -- .gfedcba  <- 7 ¼¼±×¸ÕÆ®
+            WHEN "0111" => SEG <= "11111001"; --1 [1][ ][ ][ ]
+            WHEN "1011" => SEG <= "10100100"; --2 [ ][2][ ][ ]
+            WHEN "1101" => SEG <= "10110000"; --3 [ ][ ][3][ ]
+            WHEN "1110" => SEG <= "10011001"; --4 [ ][ ][ ][4]
+            WHEN OTHERS => SEG <= "11111111"; --  [1][2][3][4]
 
         END CASE;
 
     END PROCESS;
 
+--==========================================================
 END Behavioral;
