@@ -17,10 +17,10 @@
 -- Additional Comments:
 --
 ----------------------------------------------------------------------------------
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.STD_LOGIC_ARITH.ALL;
+USE IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -31,80 +31,81 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity gbseg is
-    Port ( RSTB : in std_logic;
-           CLK_50M : in std_logic;
-           DIGIT : inout std_logic_vector(3 downto 0);
-           SEG : out std_logic_vector(7 downto 0));
-end gbseg;
+ENTITY gbseg IS
+    PORT (
+        RSTB : IN STD_LOGIC;
+        CLK_50M : IN STD_LOGIC;
+        DIGIT : INOUT STD_LOGIC_VECTOR(3 DOWNTO 0);
+        SEG : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
+END gbseg;
 
-architecture Behavioral of gbseg is
+ARCHITECTURE Behavioral OF gbseg IS
 
-signal clk_500 : std_logic;
+    SIGNAL clk_500 : STD_LOGIC;
 
-begin
------------------�ڸ�����  Clock 5MHz ----------------------
-	process(RSTB,CLK_50M)
+BEGIN
+    -----------------�ڸ�����  Clock 5MHz ----------------------
+    PROCESS (RSTB, CLK_50M)
 
---	variable cnt : integer range 0 to 50000000;  -- ������ �� �ڸ�����
----	variable cnt : integer range 0 to 5000;  -- ���ÿ�
-    variable cnt : integer range 0 to 5000000;  -- ����
-		begin
+        --	variable cnt : integer range 0 to 50000000;  -- ������ �� �ڸ�����
+        ---	variable cnt : integer range 0 to 5000;  -- ���ÿ�
+        VARIABLE cnt : INTEGER RANGE 0 TO 5000000; -- ����
+    BEGIN
 
-			if RSTB = '0' then
-				cnt := 0;
-				clk_500 <= '0';
+        IF RSTB = '0' THEN
+            cnt := 0;
+            clk_500 <= '0';
 
-			elsif rising_edge (CLK_50M) then
----				if cnt >= 49999999 then             -- ������ �� �ڸ�����
----				if cnt >= 4999 then            -- ���ÿ�
-				if cnt >= 4999999 then            -- ����
+        ELSIF rising_edge (CLK_50M) THEN
+            ---				if cnt >= 49999999 then             -- ������ �� �ڸ�����
+            ---				if cnt >= 4999 then            -- ���ÿ�
+            IF cnt >= 4999999 THEN -- ����
 
-					cnt := 0;
-					clk_500 <= not clk_500;
+                cnt := 0;
+                clk_500 <= NOT clk_500;
 
-				else
-					cnt := cnt + 1;
-					clk_500 <= clk_500;
+            ELSE
+                cnt := cnt + 1;
+                clk_500 <= clk_500;
 
-				end if;
+            END IF;
 
-			end if;
+        END IF;
 
-		end process;
--------------------Digit selection-------------------------
+    END PROCESS;
+    -------------------Digit selection-------------------------
 
-	process(RSTB,clk_500)
+    PROCESS (RSTB, clk_500)
 
-		begin
+    BEGIN
 
-			if RSTB = '0' then
---				DIGIT <= "1110";  -- �����ʿ��� ������
-			DIGIT <= "0111";  -- ���ʿ��� ������
-			elsif rising_edge (clk_500) then
-				DIGIT <=   DIGIT(0) & DIGIT(3 downto 1)   ; -- ���ʿ��� ������
---				DIGIT <=   DIGIT(2 downto 0) & DIGIT(3)  ; -- �����ʿ��� ����
+        IF RSTB = '0' THEN
+            --				DIGIT <= "1110";  -- �����ʿ��� ������
+            DIGIT <= "0111"; -- ���ʿ��� ������
+        ELSIF rising_edge (clk_500) THEN
+            DIGIT <= DIGIT(0) & DIGIT(3 DOWNTO 1); -- ���ʿ��� ������
+            --				DIGIT <=   DIGIT(2 downto 0) & DIGIT(3)  ; -- �����ʿ��� ����
 
-			end if;
+        END IF;
 
-		end process;
+    END PROCESS;
 
--------------�� �ڸ����� ���� ����----------------------------
---- �κ귦 ���� �ݴ��? ���׸�Ʈ�� 0�� ���� 1�� ����
-	process(DIGIT)
+    -------------�� �ڸ����� ���� ����----------------------------
+    --- �κ귦 ���� �ݴ��? ���׸�Ʈ�� 0�� ���� 1�� ����
+    PROCESS (DIGIT)
 
-		begin
+    BEGIN
 
-			case DIGIT is
-							              --gfedcba
-				when "0111" => SEG <= "11111001";  --���� ���ʵ���Ʈ
-				when "1011" => SEG <= "10100100";  --2
-				when "1101" => SEG <= "10110000";  --3
-				when "1110" => SEG <= "10011001";  --4
-				when others   => SEG <= "11111111";  --
+        CASE DIGIT IS
+                --gfedcba
+            WHEN "0111" => SEG <= "11111001"; --���� ���ʵ���Ʈ
+            WHEN "1011" => SEG <= "10100100"; --2
+            WHEN "1101" => SEG <= "10110000"; --3
+            WHEN "1110" => SEG <= "10011001"; --4
+            WHEN OTHERS => SEG <= "11111111"; --
 
-			end case;
+        END CASE;
 
-		end process;
+    END PROCESS;
 
-end Behavioral;
+END Behavioral;
